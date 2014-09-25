@@ -64,13 +64,15 @@ namespace chatClient
         int port = 12312;
         TcpClient client = new TcpClient();
 
-
+        // списки с очередями сообщений
         List<string> Msgs = new List<string>();
         List<string> SendMessages = new List<string>();
 
+        // вырубем поток чата при закрытии проги
         public void Stop()
         { cThread.Abort(); }
 
+        // получаем первый месседж из очереди месседжей
         public string getMessage()
         {
             if (Msgs.Count > 0)
@@ -85,13 +87,16 @@ namespace chatClient
             return "";
         }
 
+        // добавляем месседж в очередть на отправку
         public void sendMessage(string str)
         {
             SendMessages.Add(str);
         }
 
-        Thread cThread;
-        public chatClient()
+
+        Thread cThread; // поток клиента
+
+        public chatClient() // конструктор класса
         {
             client.Connect("localhost", port);
             if (client.Connected)
@@ -101,15 +106,16 @@ namespace chatClient
             }
         }
 
+        // тело треда чата
         void chatThread(object client)
         {
             TcpClient Client = (TcpClient)client;
             NetworkStream ns = Client.GetStream();
 
-            while (Client.Connected)
+            while (Client.Connected) // 
             {
                 try {           
-                    // read
+                    // если есть что читать
                     if(ns.DataAvailable)
                     {
                         byte[] buf = new byte [4096];
@@ -120,7 +126,7 @@ namespace chatClient
                         Msgs.Add(input);
                         }
                     }
-                    // write
+                    // если в очереди на запись что-то есть
                     if (SendMessages.Count > 0)
                     { 
                         byte[] buff = UTF8Encoding.UTF8.GetBytes( SendMessages[0] );
@@ -132,6 +138,7 @@ namespace chatClient
                 }
                 catch 
                 {
+                    // отрубаемся на ошибке
                     Msgs.Add("disconnected ><");
                     return;
                 }
